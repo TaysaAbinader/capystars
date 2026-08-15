@@ -70,3 +70,12 @@ export interface BackupData {
   rewards: Reward[];
   starLogs: StarLog[];
 }
+
+export interface SyncConfig {
+  gistId: string;
+  pat: string; // GitHub Personal Access Token (gist scope only)
+  enabled: boolean;
+  lastSyncedAt?: string; // ISO timestamp of last successful sync
+}
+
+export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'error' | 'offline';

@@ -13,7 +13,7 @@ import {
   approveChore,
   rejectChore,
 } from './db';
-import type { Chore, Reward, PetType, AppSettings } from './types';
+import type { Chore, Reward, PetType, AppSettings, SyncStatus } from './types';
 import { DEFAULT_SETTINGS, DEFAULT_PET } from './db/defaultData';
 import { Header } from './components/common/Header';
 import { PinPadModal } from './components/common/PinPadModal';
@@ -21,12 +21,14 @@ import { ChildDashboard } from './components/child/ChildDashboard';
 import { RewardShop } from './components/child/RewardShop';
 import { ParentDashboard } from './components/parent/ParentDashboard';
 import { unlockAudio } from './utils/sound';
+import { loadSyncConfig, syncWithGist } from './utils/gistSync';
 
 export function App() {
   const [isDbReady, setIsDbReady] = useState(false);
   const [isParentMode, setIsParentMode] = useState(false);
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [activeChildView, setActiveChildView] = useState<'chores' | 'rewards'>('chores');
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
 
   // Reactive live queries from Dexie IndexedDB
   const settings = useLiveQuery(() => db.settings.get('global_settings'), []) || DEFAULT_SETTINGS;
@@ -36,10 +38,19 @@ export function App() {
   const rewards = useLiveQuery(() => db.rewards.toArray(), []) || [];
   const starLogs = useLiveQuery(() => db.starLogs.orderBy('createdAt').reverse().toArray(), []) || [];
 
-  // Initialize DB on launch
+  // Initialize DB on launch, then auto-sync if configured
   useEffect(() => {
-    initializeDatabase().then(() => {
+    initializeDatabase().then(async () => {
       setIsDbReady(true);
+      // Auto-sync on startup if Gist sync is configured
+      const syncConfig = loadSyncConfig();
+      if (syncConfig?.enabled && syncConfig.gistId && syncConfig.pat) {
+        setSyncStatus('syncing');
+        const result = await syncWithGist(syncConfig);
+        setSyncStatus(result.ok ? 'synced' : 'error');
+        // Reset to idle after 3s so the dot doesn't stay forever
+        setTimeout(() => setSyncStatus('idle'), 3000);
+      }
     });
   }, []);
 
@@ -149,6 +160,7 @@ export function App() {
         onViewChange={setActiveChildView}
         onOpenParentGate={() => setIsPinModalOpen(true)}
         onToggleSound={handleToggleSound}
+        syncStatus={syncStatus}
       />
 
       {/* 2. Main Content Area */}

@@ -9,6 +9,7 @@ import {
   HardDrive,
   Check,
   Shield,
+  RefreshCw,
 } from 'lucide-react';
 import type { Chore, Reward, StarLog, AppSettings } from '../../types';
 import { ChoreManager } from './ChoreManager';
@@ -16,6 +17,7 @@ import { RewardManager } from './RewardManager';
 import { ApprovalQueue } from './ApprovalQueue';
 import { StarLedger } from './StarLedger';
 import { BackupRestore } from './BackupRestore';
+import { GistSyncSettings } from './GistSyncSettings';
 import { hashPin } from '../../utils/crypto';
 
 interface ParentDashboardProps {
@@ -37,7 +39,7 @@ interface ParentDashboardProps {
   onReloadAllData: () => Promise<void>;
 }
 
-type ParentTab = 'chores' | 'rewards' | 'approvals' | 'ledger' | 'settings' | 'backup';
+type ParentTab = 'chores' | 'rewards' | 'approvals' | 'ledger' | 'settings' | 'backup' | 'sync';
 
 export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   settings,
@@ -197,6 +199,18 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
             <HardDrive className="w-4 h-4 text-emerald-400" />
             <span>Backup</span>
           </button>
+
+          <button
+            onClick={() => setActiveTab('sync')}
+            className={`flex items-center gap-2 px-3.5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'sync'
+                ? 'bg-slate-900 text-white shadow-sm'
+                : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
+            }`}
+          >
+            <RefreshCw className="w-4 h-4 text-blue-400" />
+            <span>Sync</span>
+          </button>
         </div>
 
         {/* Tab Contents */}
@@ -304,6 +318,10 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
 
         {activeTab === 'backup' && (
           <BackupRestore onDataRestored={onReloadAllData} />
+        )}
+
+        {activeTab === 'sync' && (
+          <GistSyncSettings onSyncComplete={onReloadAllData} />
         )}
       </div>
     </div>

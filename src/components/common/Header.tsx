@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Star, Flame, Lock, Volume2, VolumeX, Gift, CheckSquare } from 'lucide-react';
-import type { AppSettings } from '../../types';
+import { Star, Flame, Lock, Volume2, VolumeX, Gift, CheckSquare, RefreshCw } from 'lucide-react';
+import type { AppSettings, SyncStatus } from '../../types';
 import { playPopSound } from '../../utils/sound';
 
 interface HeaderProps {
@@ -10,6 +10,7 @@ interface HeaderProps {
   onViewChange: (view: 'chores' | 'rewards') => void;
   onOpenParentGate: () => void;
   onToggleSound: () => void;
+  syncStatus?: SyncStatus;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -18,6 +19,7 @@ export const Header: React.FC<HeaderProps> = ({
   onViewChange,
   onOpenParentGate,
   onToggleSound,
+  syncStatus,
 }) => {
   return (
     <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b-2 border-amber-200/80 px-4 sm:px-6 py-3 safe-top">
@@ -99,11 +101,25 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Parent Lock Icon */}
           <button
             onClick={onOpenParentGate}
-            className="p-2 text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-amber-100 rounded-xl transition-colors border border-slate-200/80 cursor-pointer"
+            className="relative p-2 text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-amber-100 rounded-xl transition-colors border border-slate-200/80 cursor-pointer"
             title="Parent Area (PIN Required)"
             aria-label="Parent Dashboard"
           >
             <Lock className="w-4 h-4 text-slate-700" />
+            {/* Sync status dot */}
+            {syncStatus && syncStatus !== 'idle' && (
+              <span
+                className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${
+                  syncStatus === 'synced' ? 'bg-emerald-400' :
+                  syncStatus === 'syncing' ? 'bg-blue-400 animate-pulse' :
+                  syncStatus === 'error' ? 'bg-red-400' :
+                  syncStatus === 'offline' ? 'bg-orange-400' : ''
+                }`}
+              />
+            )}
+            {syncStatus === 'syncing' && (
+              <RefreshCw className="absolute -top-1 -right-1 w-3 h-3 text-blue-500 animate-spin" />
+            )}
           </button>
         </div>
       </div>
