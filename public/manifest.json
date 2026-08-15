@@ -1,0 +1,18 @@
+{
+  "name": "CapyStars - Kid's Chore Tracker",
+  "short_name": "CapyStars",
+  "description": "Fun, gamified daily routines and chore tracker with animated pet companions and star rewards for kids.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFBEB",
+  "theme_color": "#F59E0B",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
