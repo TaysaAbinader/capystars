@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import {
   db,
   initializeDatabase,
+  checkAndPerformDailyReset,
   completeChore,
   uncompleteChore,
   claimReward,
@@ -56,6 +57,33 @@ export function App() {
       }
     });
   }, []);
+
+  // Automatically check & perform daily chore reset whenever the app is brought to foreground (visibility / focus) or at midnight
+  useEffect(() => {
+    if (!isDbReady) return;
+
+    const handleResumeOrMidnight = () => {
+      checkAndPerformDailyReset();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        handleResumeOrMidnight();
+      }
+    };
+
+    window.addEventListener('focus', handleResumeOrMidnight);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Periodic check every 30 seconds (handles midnight rollover while screen stays on)
+    const intervalId = setInterval(handleResumeOrMidnight, 30000);
+
+    return () => {
+      window.removeEventListener('focus', handleResumeOrMidnight);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(intervalId);
+    };
+  }, [isDbReady]);
 
   // Unlock web audio on first tap
   useEffect(() => {
