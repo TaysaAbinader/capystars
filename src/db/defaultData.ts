@@ -1,6 +1,111 @@
-import type { Chore, Reward, PetState, AppSettings } from '../types';
+import type { Chore, Reward, PetState, AppSettings, TimeframeGoals, Achievement } from '../types';
 
 export const DEFAULT_PIN_HASH = '1234'; // Simple default PIN for first setup
+
+export const DEFAULT_GOALS: TimeframeGoals = {
+  dailyChoresTarget: 5,
+  dailyStarsTarget: 10,
+  weeklyChoresTarget: 30,
+  weeklyStarsTarget: 60,
+  monthlyChoresTarget: 120,
+  monthlyStarsTarget: 250,
+};
+
+export const DEFAULT_ACHIEVEMENTS: Achievement[] = [
+  // Daily achievements
+  {
+    id: 'daily_first_step',
+    title: 'First Step',
+    description: 'Complete your first chore of the day',
+    icon: '🌱',
+    timeframe: 'daily',
+    targetValue: 1,
+    currentValue: 0,
+    unlocked: false,
+  },
+  {
+    id: 'daily_goal_crusher',
+    title: 'Daily Goal Crusher',
+    description: 'Reach your daily chore goal (5 chores)',
+    icon: '🎯',
+    timeframe: 'daily',
+    targetValue: 5,
+    currentValue: 0,
+    unlocked: false,
+  },
+  {
+    id: 'daily_morning_champion',
+    title: 'Morning Master',
+    description: 'Complete all morning routine chores',
+    icon: '🌅',
+    timeframe: 'daily',
+    targetValue: 4,
+    currentValue: 0,
+    unlocked: false,
+  },
+  // Weekly achievements
+  {
+    id: 'weekly_goal_hero',
+    title: 'Weekly Hero',
+    description: 'Complete 30 chores in a single week',
+    icon: '🏆',
+    timeframe: 'weekly',
+    targetValue: 30,
+    currentValue: 0,
+    unlocked: false,
+  },
+  {
+    id: 'weekly_school_star',
+    title: 'Weekday Wonder',
+    description: 'Complete chores 5 weekdays in a row',
+    icon: '📚',
+    timeframe: 'weekly',
+    targetValue: 5,
+    currentValue: 0,
+    unlocked: false,
+  },
+  {
+    id: 'weekly_weekend_warrior',
+    title: 'Weekend Warrior',
+    description: 'Complete 6 or more weekend chores',
+    icon: '🚀',
+    timeframe: 'weekly',
+    targetValue: 6,
+    currentValue: 0,
+    unlocked: false,
+  },
+  // Monthly achievements
+  {
+    id: 'monthly_century_club',
+    title: 'Century Club',
+    description: 'Complete 100+ chores in a single month',
+    icon: '👑',
+    timeframe: 'monthly',
+    targetValue: 100,
+    currentValue: 0,
+    unlocked: false,
+  },
+  {
+    id: 'monthly_super_saver',
+    title: 'Super Star Collector',
+    description: 'Earn 250+ stars in a single month',
+    icon: '⭐️',
+    timeframe: 'monthly',
+    targetValue: 250,
+    currentValue: 0,
+    unlocked: false,
+  },
+  {
+    id: 'monthly_consistency_legend',
+    title: 'Consistency Legend',
+    description: 'Active for at least 20 days in a month',
+    icon: '🔥',
+    timeframe: 'monthly',
+    targetValue: 20,
+    currentValue: 0,
+    unlocked: false,
+  },
+];
 
 export const DEFAULT_SETTINGS: AppSettings = {
   id: 'global_settings',
@@ -13,6 +118,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   requireApproval: false,
   soundEnabled: true,
   hapticsEnabled: true,
+  goals: DEFAULT_GOALS,
 };
 
 export const DEFAULT_PET: PetState = {
@@ -98,14 +204,24 @@ export const DEFAULT_CHORES: Omit<Chore, 'id'>[] = [
     orderIndex: 2,
   },
   {
-    title: 'Tidy Up Toys & Play Area',
+    title: 'Weekend Deep Clean Play Area',
+    icon: '🧹',
+    routine: 'afternoon',
+    starsReward: 3,
+    repeat: 'weekends',
+    status: 'todo',
+    createdAt: new Date().toISOString(),
+    orderIndex: 3,
+  },
+  {
+    title: 'Tidy Up Toys & Books',
     icon: '🧸',
     routine: 'afternoon',
     starsReward: 2,
     repeat: 'daily',
     status: 'todo',
     createdAt: new Date().toISOString(),
-    orderIndex: 3,
+    orderIndex: 4,
   },
 
   // Evening Routine
@@ -134,7 +250,7 @@ export const DEFAULT_CHORES: Omit<Chore, 'id'>[] = [
     icon: '📚',
     routine: 'evening',
     starsReward: 1,
-    repeat: 'daily',
+    repeat: 'weekdays',
     status: 'todo',
     createdAt: new Date().toISOString(),
     orderIndex: 2,
@@ -172,6 +288,16 @@ export const DEFAULT_CHORES: Omit<Chore, 'id'>[] = [
     orderIndex: 1,
   },
   {
+    title: 'Weekend Bike/Car Wash or Yard Help',
+    icon: '🚲',
+    routine: 'bonus',
+    starsReward: 4,
+    repeat: 'weekends',
+    status: 'todo',
+    createdAt: new Date().toISOString(),
+    orderIndex: 2,
+  },
+  {
     title: 'Help Wash or Put Away Laundry',
     icon: '🧺',
     routine: 'bonus',
@@ -179,7 +305,7 @@ export const DEFAULT_CHORES: Omit<Chore, 'id'>[] = [
     repeat: 'daily',
     status: 'todo',
     createdAt: new Date().toISOString(),
-    orderIndex: 2,
+    orderIndex: 3,
   },
 ];
 
@@ -227,3 +353,4 @@ export const DEFAULT_REWARDS: Omit<Reward, 'id'>[] = [
     createdAt: new Date().toISOString(),
   },
 ];
+

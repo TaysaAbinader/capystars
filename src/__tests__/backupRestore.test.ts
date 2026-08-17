@@ -15,7 +15,7 @@ describe('Backup and Data Portability', () => {
   it('exports valid backup JSON schema with all entities', async () => {
     const backup = await exportAllData();
 
-    expect(backup.version).toBe(1);
+    expect(backup.version).toBe(2);
     expect(backup.timestamp).toBeDefined();
     expect(backup.settings).toBeDefined();
     expect(backup.settings.childName).toBe('My Champion');

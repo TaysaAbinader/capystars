@@ -1,19 +1,31 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sun, Sunset, Moon, Sparkles, LayoutGrid } from 'lucide-react';
-import type { Chore, PetState, RoutineType, PetType } from '../../types';
+import {
+  Sun,
+  Sunset,
+  Moon,
+  Sparkles,
+  LayoutGrid,
+  Calendar,
+  BarChart2,
+} from 'lucide-react';
+import type { Chore, PetState, RoutineType, PetType, TimeframeGoals, ChildViewType } from '../../types';
 import { PetCompanion } from '../pet/PetCompanion';
 import { PetSanctuaryModal } from '../pet/PetSanctuaryModal';
 import { RoutineSection } from './RoutineSection';
 import { CelebrationModal } from './CelebrationModal';
+import { GoalProgressBar } from '../history/GoalProgressBar';
 import { triggerRoutineCelebration } from '../../utils/confetti';
 import { playPopSound } from '../../utils/sound';
+import { isChoreActiveOnDate, isWeekendDay } from '../../db';
 
 interface ChildDashboardProps {
   chores: Chore[];
   pet: PetState;
+  goals?: TimeframeGoals;
   onToggleChore: (chore: Chore) => Promise<void>;
   onSelectPet: (type: PetType, name: string) => Promise<void>;
+  onNavigateView?: (view: ChildViewType) => void;
   soundEnabled?: boolean;
 }
 
@@ -37,11 +49,14 @@ const ROUTINE_TABS: RoutineTabConfig[] = [
 export const ChildDashboard: React.FC<ChildDashboardProps> = ({
   chores,
   pet,
+  goals = { dailyChoresTarget: 5, dailyStarsTarget: 10, weeklyChoresTarget: 30, weeklyStarsTarget: 60, monthlyChoresTarget: 120, monthlyStarsTarget: 250 },
   onToggleChore,
   onSelectPet,
+  onNavigateView,
   soundEnabled = true,
 }) => {
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
+  const [scheduleFilter, setScheduleFilter] = useState<'today' | 'all'>('today');
   const [isSanctuaryOpen, setIsSanctuaryOpen] = useState(false);
   const [celebrationInfo, setCelebrationInfo] = useState<{
     isOpen: boolean;
@@ -53,9 +68,20 @@ export const ChildDashboard: React.FC<ChildDashboardProps> = ({
     earnedStars: 0,
   });
 
+  const isTodayWeekend = isWeekendDay(new Date());
+
+  // Filter chores based on active schedule (today vs all)
+  const scheduledChores = chores.filter((c) => {
+    if (scheduleFilter === 'all') return true;
+    return isChoreActiveOnDate(c, new Date());
+  });
+
+  // Calculate today's completed chores count for daily goal
+  const completedTodayCount = scheduledChores.filter((c) => c.status === 'completed').length;
+
   const handleToggleChoreWrapper = async (chore: Chore) => {
     // Check if completing this chore completes the routine
-    const routineChores = chores.filter((c) => c.routine === chore.routine);
+    const routineChores = scheduledChores.filter((c) => c.routine === chore.routine);
     const completedBefore = routineChores.filter((c) => c.status === 'completed').length;
     const isNowCompleting = chore.status === 'todo';
 
@@ -83,10 +109,10 @@ export const ChildDashboard: React.FC<ChildDashboardProps> = ({
     }
   };
 
-  const morningChores = chores.filter((c) => c.routine === 'morning');
-  const afternoonChores = chores.filter((c) => c.routine === 'afternoon');
-  const eveningChores = chores.filter((c) => c.routine === 'evening');
-  const bonusChores = chores.filter((c) => c.routine === 'bonus');
+  const morningChores = scheduledChores.filter((c) => c.routine === 'morning');
+  const afternoonChores = scheduledChores.filter((c) => c.routine === 'afternoon');
+  const eveningChores = scheduledChores.filter((c) => c.routine === 'evening');
+  const bonusChores = scheduledChores.filter((c) => c.routine === 'bonus');
 
   return (
     <div className="space-y-6">
@@ -97,7 +123,107 @@ export const ChildDashboard: React.FC<ChildDashboardProps> = ({
         onOpenSanctuary={() => setIsSanctuaryOpen(true)}
       />
 
-      {/* 2. Routine Filter Tabs */}
+      {/* 2. Today's Goal Progress & Quick Navigation Links */}
+      <div className="space-y-3">
+        <GoalProgressBar
+          current={completedTodayCount}
+          target={goals.dailyChoresTarget}
+          label="Today's Chore Goal"
+          sublabel={
+            isTodayWeekend
+              ? '🏖️ Weekend helpers goal for today'
+              : '🎒 School weekday routine goal'
+          }
+          icon="🎯"
+          colorScheme="amber"
+          suffix="Chores"
+        />
+
+        {/* Quick-links row to Weekly / Monthly */}
+        {onNavigateView && (
+          <div className="grid grid-cols-2 gap-2.5">
+            <button
+              onClick={() => {
+                playPopSound(soundEnabled);
+                onNavigateView('weekly');
+              }}
+              className="p-3 bg-white hover:bg-blue-50 border border-blue-200 rounded-2xl flex items-center justify-between text-left transition-all cursor-pointer group shadow-2xs"
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="p-2 rounded-xl bg-blue-100 text-blue-700">
+                  <BarChart2 className="w-4 h-4" />
+                </span>
+                <div>
+                  <h4 className="font-extrabold text-xs text-slate-800 group-hover:text-blue-700">
+                    Weekly Progress
+                  </h4>
+                  <p className="text-[10px] font-semibold text-slate-400">View 7-day report & badges</p>
+                </div>
+              </div>
+              <span className="text-blue-500 font-black text-sm">→</span>
+            </button>
+
+            <button
+              onClick={() => {
+                playPopSound(soundEnabled);
+                onNavigateView('monthly');
+              }}
+              className="p-3 bg-white hover:bg-purple-50 border border-purple-200 rounded-2xl flex items-center justify-between text-left transition-all cursor-pointer group shadow-2xs"
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="p-2 rounded-xl bg-purple-100 text-purple-700">
+                  <Calendar className="w-4 h-4" />
+                </span>
+                <div>
+                  <h4 className="font-extrabold text-xs text-slate-800 group-hover:text-purple-700">
+                    Monthly History
+                  </h4>
+                  <p className="text-[10px] font-semibold text-slate-400">Calendar heatmap & trophies</p>
+                </div>
+              </div>
+              <span className="text-purple-500 font-black text-sm">→</span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* 3. Schedule Filter Bar (Today's Schedule vs All Chores) */}
+      <div className="flex items-center justify-between gap-3 bg-white/70 backdrop-blur-xs p-2 sm:p-2.5 rounded-2xl border border-amber-200">
+        <div className="flex items-center gap-2 text-xs font-black text-amber-950 px-2">
+          <span>{isTodayWeekend ? '🏖️ Weekend Mode' : '🎒 Weekday Mode'}</span>
+        </div>
+
+        <div className="flex items-center gap-1 bg-amber-100/70 p-1 rounded-xl">
+          <button
+            onClick={() => {
+              playPopSound(soundEnabled);
+              setScheduleFilter('today');
+            }}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              scheduleFilter === 'today'
+                ? 'bg-white text-amber-950 shadow-xs'
+                : 'text-amber-800/70 hover:text-amber-950'
+            }`}
+          >
+            Today's Chores ({chores.filter((c) => isChoreActiveOnDate(c, new Date())).length})
+          </button>
+          <button
+            onClick={() => {
+              playPopSound(soundEnabled);
+              setScheduleFilter('all');
+            }}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              scheduleFilter === 'all'
+                ? 'bg-white text-amber-950 shadow-xs'
+                : 'text-amber-800/70 hover:text-amber-950'
+            }`}
+          >
+            All Scheduled ({chores.length})
+          </button>
+        </div>
+      </div>
+
+      {/* 4. Routine Filter Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
         {ROUTINE_TABS.map((tab) => {
           const isActive = activeTab === tab.id;
@@ -105,8 +231,8 @@ export const ChildDashboard: React.FC<ChildDashboardProps> = ({
           // Count pending chores in tab
           const count =
             tab.id === 'all'
-              ? chores.filter((c) => c.status === 'todo').length
-              : chores.filter((c) => c.routine === tab.id && c.status === 'todo').length;
+              ? scheduledChores.filter((c) => c.status === 'todo').length
+              : scheduledChores.filter((c) => c.routine === tab.id && c.status === 'todo').length;
 
           return (
             <motion.button
@@ -138,7 +264,7 @@ export const ChildDashboard: React.FC<ChildDashboardProps> = ({
         })}
       </div>
 
-      {/* 3. Routine Sections */}
+      {/* 5. Routine Sections */}
       <div className="space-y-4">
         {(activeTab === 'all' || activeTab === 'morning') && (
           <RoutineSection
@@ -189,7 +315,7 @@ export const ChildDashboard: React.FC<ChildDashboardProps> = ({
         )}
       </div>
 
-      {/* 4. Pet Sanctuary Modal */}
+      {/* 6. Pet Sanctuary Modal */}
       <PetSanctuaryModal
         currentPet={pet}
         isOpen={isSanctuaryOpen}
@@ -198,7 +324,7 @@ export const ChildDashboard: React.FC<ChildDashboardProps> = ({
         soundEnabled={soundEnabled}
       />
 
-      {/* 5. Routine Celebration Modal */}
+      {/* 7. Routine Celebration Modal */}
       <CelebrationModal
         isOpen={celebrationInfo.isOpen}
         routineTitle={celebrationInfo.routineTitle}
@@ -209,3 +335,4 @@ export const ChildDashboard: React.FC<ChildDashboardProps> = ({
     </div>
   );
 };
+

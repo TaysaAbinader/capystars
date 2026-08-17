@@ -67,20 +67,71 @@ export const ChoreManager: React.FC<ChoreManagerProps> = ({
     setIsEditing(false);
   };
 
+  const [cadenceFilter, setCadenceFilter] = useState<'all' | RepeatType>('all');
+
+  const filteredChores = chores.filter((c) => {
+    if (cadenceFilter === 'all') return true;
+    return c.repeat === cadenceFilter;
+  });
+
   return (
     <div className="space-y-6">
       {/* Top action header */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h3 className="text-lg font-black text-slate-900">Manage Chores & Routines</h3>
-          <p className="text-xs text-slate-500">Create, edit, or adjust star values for your daughter's chores</p>
+          <p className="text-xs text-slate-500">Create, edit, or customize weekday vs. weekend chore cadences</p>
         </div>
         <button
           onClick={handleOpenNew}
-          className="py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-amber-500 hover:bg-amber-600 shadow-md flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+          className="py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-amber-500 hover:bg-amber-600 shadow-md flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           <span>Add New Chore</span>
+        </button>
+      </div>
+
+      {/* Cadence Filter Tabs */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+        <button
+          onClick={() => setCadenceFilter('all')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+            cadenceFilter === 'all'
+              ? 'bg-slate-900 text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          All ({chores.length})
+        </button>
+        <button
+          onClick={() => setCadenceFilter('daily')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+            cadenceFilter === 'daily'
+              ? 'bg-amber-500 text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          Daily ({chores.filter((c) => c.repeat === 'daily').length})
+        </button>
+        <button
+          onClick={() => setCadenceFilter('weekdays')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+            cadenceFilter === 'weekdays'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          Weekdays Only ({chores.filter((c) => c.repeat === 'weekdays').length})
+        </button>
+        <button
+          onClick={() => setCadenceFilter('weekends')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+            cadenceFilter === 'weekends'
+              ? 'bg-orange-600 text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          Weekends Only ({chores.filter((c) => c.repeat === 'weekends').length})
         </button>
       </div>
 
@@ -166,8 +217,8 @@ export const ChoreManager: React.FC<ChoreManagerProps> = ({
                       className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800"
                     >
                       <option value="daily">Every Day</option>
-                      <option value="weekdays">Weekdays (Mon-Fri)</option>
-                      <option value="weekends">Weekends Only</option>
+                      <option value="weekdays">Weekdays Only (Mon-Fri)</option>
+                      <option value="weekends">Weekends Only (Sat-Sun)</option>
                       <option value="once">One-Time Only</option>
                     </select>
                   </div>
@@ -216,9 +267,9 @@ export const ChoreManager: React.FC<ChoreManagerProps> = ({
         )}
       </AnimatePresence>
 
-      {/* List of Existing Chores */}
+      {/* List of Filtered Chores */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {chores.map((chore) => (
+        {filteredChores.map((chore) => (
           <div
             key={chore.id}
             className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between gap-3 hover:border-slate-300 transition-all"
@@ -232,7 +283,17 @@ export const ChoreManager: React.FC<ChoreManagerProps> = ({
                 <div className="flex items-center gap-2 text-[11px] text-slate-500 font-semibold mt-0.5">
                   <span className="capitalize text-amber-700 font-bold">{chore.routine}</span>
                   <span>•</span>
-                  <span>{chore.repeat}</span>
+                  <span
+                    className={`px-1.5 py-0.2 rounded font-extrabold ${
+                      chore.repeat === 'weekdays'
+                        ? 'bg-blue-100 text-blue-700'
+                        : chore.repeat === 'weekends'
+                        ? 'bg-orange-100 text-orange-700'
+                        : 'bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    {chore.repeat}
+                  </span>
                   <span>•</span>
                   <span className="text-amber-600 font-bold">+{chore.starsReward} ⭐️</span>
                 </div>
@@ -263,3 +324,4 @@ export const ChoreManager: React.FC<ChoreManagerProps> = ({
     </div>
   );
 };
+

@@ -13,11 +13,13 @@ import {
   approveChore,
   rejectChore,
 } from './db';
-import type { Chore, Reward, PetType, AppSettings, SyncStatus } from './types';
-import { DEFAULT_SETTINGS, DEFAULT_PET } from './db/defaultData';
+import type { Chore, Reward, PetType, AppSettings, SyncStatus, ChildViewType } from './types';
+import { DEFAULT_SETTINGS, DEFAULT_PET, DEFAULT_GOALS } from './db/defaultData';
 import { Header } from './components/common/Header';
 import { PinPadModal } from './components/common/PinPadModal';
 import { ChildDashboard } from './components/child/ChildDashboard';
+import { WeeklyHistoryView } from './components/history/WeeklyHistoryView';
+import { MonthlyHistoryView } from './components/history/MonthlyHistoryView';
 import { RewardShop } from './components/child/RewardShop';
 import { ParentDashboard } from './components/parent/ParentDashboard';
 import { unlockAudio } from './utils/sound';
@@ -27,7 +29,7 @@ export function App() {
   const [isDbReady, setIsDbReady] = useState(false);
   const [isParentMode, setIsParentMode] = useState(false);
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
-  const [activeChildView, setActiveChildView] = useState<'chores' | 'rewards'>('chores');
+  const [activeChildView, setActiveChildView] = useState<ChildViewType>('chores');
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
 
   // Reactive live queries from Dexie IndexedDB
@@ -37,6 +39,7 @@ export function App() {
   const chores = useLiveQuery(() => db.chores.orderBy('orderIndex').toArray(), []) || [];
   const rewards = useLiveQuery(() => db.rewards.toArray(), []) || [];
   const starLogs = useLiveQuery(() => db.starLogs.orderBy('createdAt').reverse().toArray(), []) || [];
+  const achievements = useLiveQuery(() => db.achievements.toArray(), []) || [];
 
   // Initialize DB on launch, then auto-sync if configured
   useEffect(() => {
@@ -126,6 +129,8 @@ export function App() {
     }
   };
 
+  const currentGoals = settings.goals || DEFAULT_GOALS;
+
   // ---------------- View Rendering ---------------- //
 
   if (isParentMode) {
@@ -165,15 +170,36 @@ export function App() {
 
       {/* 2. Main Content Area */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-5">
-        {activeChildView === 'chores' ? (
+        {activeChildView === 'chores' && (
           <ChildDashboard
             chores={chores}
             pet={activePet}
+            goals={currentGoals}
             onToggleChore={handleToggleChore}
             onSelectPet={handleSelectPet}
+            onNavigateView={setActiveChildView}
             soundEnabled={settings.soundEnabled}
           />
-        ) : (
+        )}
+
+        {activeChildView === 'weekly' && (
+          <WeeklyHistoryView
+            goals={currentGoals}
+            achievements={achievements}
+            soundEnabled={settings.soundEnabled}
+            onBackToChores={() => setActiveChildView('chores')}
+          />
+        )}
+
+        {activeChildView === 'monthly' && (
+          <MonthlyHistoryView
+            goals={currentGoals}
+            achievements={achievements}
+            soundEnabled={settings.soundEnabled}
+          />
+        )}
+
+        {activeChildView === 'rewards' && (
           <RewardShop
             currentStars={settings.currentStars}
             rewards={rewards}
@@ -199,3 +225,4 @@ export function App() {
 }
 
 export default App;
+

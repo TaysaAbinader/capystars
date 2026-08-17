@@ -10,14 +10,16 @@ import {
   Check,
   Shield,
   RefreshCw,
+  BarChart2,
 } from 'lucide-react';
-import type { Chore, Reward, StarLog, AppSettings } from '../../types';
+import type { Chore, Reward, StarLog, AppSettings, TimeframeGoals } from '../../types';
 import { ChoreManager } from './ChoreManager';
 import { RewardManager } from './RewardManager';
 import { ApprovalQueue } from './ApprovalQueue';
 import { StarLedger } from './StarLedger';
 import { BackupRestore } from './BackupRestore';
 import { GistSyncSettings } from './GistSyncSettings';
+import { ActivityReports } from './ActivityReports';
 import { hashPin } from '../../utils/crypto';
 
 interface ParentDashboardProps {
@@ -39,7 +41,7 @@ interface ParentDashboardProps {
   onReloadAllData: () => Promise<void>;
 }
 
-type ParentTab = 'chores' | 'rewards' | 'approvals' | 'ledger' | 'settings' | 'backup' | 'sync';
+type ParentTab = 'chores' | 'reports' | 'rewards' | 'approvals' | 'ledger' | 'settings' | 'backup' | 'sync';
 
 export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   settings,
@@ -87,6 +89,10 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
     setTimeout(() => setSettingsSaved(false), 3000);
   };
 
+  const handleUpdateGoals = async (goals: TimeframeGoals) => {
+    await onUpdateSettings({ goals });
+  };
+
   return (
     <div className="min-h-screen bg-slate-100/90 text-slate-800 pb-16">
       {/* Top Header */}
@@ -128,6 +134,18 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
           >
             <CheckSquare className="w-4 h-4 text-amber-400" />
             <span>Chores ({chores.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('reports')}
+            className={`flex items-center gap-2 px-3.5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'reports'
+                ? 'bg-slate-900 text-white shadow-sm'
+                : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
+            }`}
+          >
+            <BarChart2 className="w-4 h-4 text-blue-400" />
+            <span>Activity & Reports</span>
           </button>
 
           <button
@@ -219,6 +237,13 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
             chores={chores}
             onSaveChore={onSaveChore}
             onDeleteChore={onDeleteChore}
+          />
+        )}
+
+        {activeTab === 'reports' && (
+          <ActivityReports
+            settings={settings}
+            onUpdateGoals={handleUpdateGoals}
           />
         )}
 
@@ -327,3 +352,4 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
     </div>
   );
 };
+
