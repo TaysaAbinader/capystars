@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import Dexie from 'dexie';
-import { CapyStarsDB, initializeDatabase, DEFAULT_SETTINGS, DEFAULT_PET } from '../db';
-import { DEFAULT_GOALS } from '../db/defaultData';
+import { CapyStarsDB } from '../db';
+import { DEFAULT_SETTINGS, DEFAULT_GOALS, DEFAULT_ACHIEVEMENTS } from '../db/defaultData';
 
 describe('Database Schema Version 1 -> Version 2 Seamless Migration', () => {
   it('seamlessly upgrades an existing v1 database to v2 preserving all data', async () => {
@@ -94,7 +94,6 @@ describe('Database Schema Version 1 -> Version 2 Seamless Migration', () => {
     }
     const achCount = await v2Db.achievements.count();
     if (achCount === 0) {
-      const { DEFAULT_ACHIEVEMENTS } = await import('../db/defaultData');
       await v2Db.achievements.bulkPut(DEFAULT_ACHIEVEMENTS);
     }
 
