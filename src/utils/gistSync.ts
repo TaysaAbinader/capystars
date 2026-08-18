@@ -189,15 +189,18 @@ function mergeData(local: BackupData, remote: BackupData): BackupData {
   const remoteDate = new Date(remote.settings.lastActiveDate || 0).getTime();
   const winningSettings = localDate >= remoteDate ? local.settings : remote.settings;
 
-  // Pet: take the happier / higher-leveled pet
-  const winningPet =
-    local.pet.level > remote.pet.level
-      ? local.pet
-      : remote.pet.level > local.pet.level
-        ? remote.pet
-        : local.pet.happiness >= remote.pet.happiness
-          ? local.pet
-          : remote.pet;
+  // Pet: prefer the more "lived-in" pet.
+  // Priority: level → totalFedCount → happiness.
+  // Using totalFedCount as the primary tie-breaker means a freshly-installed
+  // device (fed count = 0) will always defer to the Gist pet, preserving the
+  // pet name and other customizations set on the original device.
+  const winningPet = (() => {
+    if (local.pet.level !== remote.pet.level)
+      return local.pet.level > remote.pet.level ? local.pet : remote.pet;
+    if (local.pet.totalFedCount !== remote.pet.totalFedCount)
+      return local.pet.totalFedCount > remote.pet.totalFedCount ? local.pet : remote.pet;
+    return local.pet.happiness >= remote.pet.happiness ? local.pet : remote.pet;
+  })();
 
   return {
     version: 1,
